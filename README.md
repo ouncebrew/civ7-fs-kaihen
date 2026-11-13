@@ -2,14 +2,12 @@
 
 Boots kaiHEN 0.0.4 on a Switch 2 through Civilization VII.
 
-kaiHEN is [kurumuz](https://github.com/kurumuz)'s homebrew enabler (HEN) for Switch 2: once it runs, holding
-R while opening a game starts hbmenu, the homebrew menu, instead. kaiHEN
-normally starts from the game SmileBASIC. This repository starts it from
-Civilization VII instead, using the Civ7 file-system exploit from
-[civ7-fs](https://github.com/HerXayah/civ7-fs) and Gezine's
+[kaiHEN](https://github.com/ouncebrew/kaihen) is a homebrew enabler (HEN)
+for Switch 2: once it runs, holding R while opening a game starts
+homebrew menu instead. kaiHEN normally starts from the game SmileBASIC.
+This repository starts it from Civilization VII instead, using the fs
+exploit from [civ7-fs](https://github.com/HerXayah/civ7-fs) and Gezine's
 [CivSwitch](https://github.com/Gezine/CivSwitch) as the way in.
-
-This runs exploits against system services. Use it at your own risk.
 
 ## What you need
 
@@ -22,10 +20,7 @@ This runs exploits against system services. Use it at your own risk.
   home when you get the micronag (telling you this card isn't supported).
 - A computer on the same network, preferably running Linux or macOS, with a
   recent Node.js (tested with 24). No `npm install` is needed.
-- The kaiHEN 0.0.4 release, unpacked. kaiHEN is not publicly released yet,
-  so this repository does not include it or link to it. The launcher uses its
-  `ns2jb/testship/` folder, which holds the kaiHEN binaries, `hbmenu.nro` and
-  a `programs/` folder of homebrew to copy to the SD card.
+- The [kaiHEN](https://github.com/ouncebrew/kaihen) 0.0.4 release, unpacked.
 
 ## Booting kaiHEN
 
@@ -140,10 +135,9 @@ adapter after kaiHEN's unmodified `bootstrap.bin`.
 - [Gezine](https://github.com/Gezine/CivSwitch) for CivSwitch, the Civ7
   entrypoint.
 - [civswitch-kit](https://gitee.com/mza1010/civswitch-kit), the original Civ7
-  FS kit.
+  FS kit, based on slapah/Hokage's work, which is itself based on ns2jb.
 - [civ7-fs](https://github.com/HerXayah/civ7-fs), the Civ7 FS port this
   repository builds on.
-- [kurumuz](https://github.com/kurumuz) for kaiHEN and its ns2jb engine.
-- [Rastapasta](https://github.com/rastapasta) for the research, and for
-  putting up with the rants.
+- [kurumuz](https://github.com/kurumuz) for kaiHEN and his ns2jb fork.
+- [pepsipu](https://gitlab.com/pepsipu/ns2jb) for discovering nsj2b vuln, and the ns2jb codebase.
 - LLMs were involved in the development of this. Please don't use it if you don't trust it.
