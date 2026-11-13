@@ -63,20 +63,6 @@ async function main(imagePath, bootstrapPath, gameMainPath, programs = []) {
   const monitor = state.services.find(item => item.name === 'pm:dmnt');
   check(shell && monitor, 'Required PM sessions are missing');
   check(state.notifiers.length === 1, 'Owned FS notifier is missing');
-  const notifierProof = read('-notifier-proof.json');
-  check(notifierProof.identityVerified && notifierProof.session === live.session &&
-    notifierProof.report === memory.reportFile &&
-    Number.isSafeInteger(notifierProof.E) && Number.isSafeInteger(notifierProof.B),
-    'FS native allocator proof is not from this boot');
-  check(await memory.pointer(notifierProof.E + 8) === notifierProof.B &&
-    await memory.u32(notifierProof.E + 16) === 1,
-    'Owned FS notifier changed after its identity proof');
-  const notifierTable = await memory.pointer(notifierProof.E);
-  const notifierMethod = await memory.pointer(notifierTable + 4 * 8);
-  const fsTextBase = notifierMethod - 0x1201b0;
-  check(fsTextBase > 0 && fsTextBase % 0x1000 === 0,
-    'FS notifier method is outside an aligned text mapping');
-  console.log('FS notifier address qualified; exporting Loader handle');
   const exported = await exportHandle(memory, row.receive, 'Native launch Loader readiness');
   console.log('Exporting FS process handle');
   const fsProcess = await exportHandle(memory, 0xffff8001, 'Native RO reader FS process');

@@ -13,7 +13,9 @@ This runs exploits against system services. Use it at your own risk.
 
 ## What you need
 
-- A Switch 2 <= 23.0.1. Only tested on firmware 23.0.1 with the exFAT update.
+- A Switch 2 <= 23.0.1. Only tested on firmware 23.0.1, does not work on any lower
+  right now. It's much slower without the exFAT update as that's what wave
+  timing is tuned for, but [it'll work given enough tries](https://theonion.com/study-83-of-gamblers-quit-right-before-they-would-hav-1819575092/).
 - Civilization VII on cartridge and CivSwitch set up,
   so that the game shows `Awaiting payload at <console-ip>:9026` when started.
 - An SD card in the console. A non-express microSD card will work too, press
@@ -34,7 +36,9 @@ This runs exploits against system services. Use it at your own risk.
 1. Set up a wired connection that won't get you Nintendo server access.
    Be very careful with this. If you don't know how to do this right,
    DO NOT USE THIS YET. It's not worth the risk of getting the blacklist
-   update that'll lock you out of civ 7 without a reboot.
+   update that'll lock you out of Civ 7 without a reboot. If you will set up
+   90DNS, follow the [instructions on Gitlab](https://a.gitlab.io/90dns/)
+   precisely, do not skip any steps.
 2. Boot into CivSwitch console by going to Civ 7 -> Load Game.
    Wait for `Awaiting payload`.
 3. From this repository's folder, run the launcher with your console's IP
@@ -95,7 +99,7 @@ Most failed runs stop in phase 2 with `Positive canary verification failed`,
 or in phase 3 at `find-metadata` or `install-retained`. Getting FS memory is a
 race and often takes several tries. kaiHEN has not run at that point.
 
-Phase 2 tries up to 30 waves (race attempts) before it gives up. No tested on
+Phase 2 tries up to 30 waves (race attempts) before it gives up. No test run on
 my console has succeeded after wave 10, so `NS2_WAVE_ATTEMPTS=10` may be the better
 setting to save time and fail early.
 
