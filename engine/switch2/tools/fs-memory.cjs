@@ -136,7 +136,8 @@ async function connect(reportFile) {
     // A full CodeFS file can require hundreds of bounded console reads inside
     // one serialized controller request. Keep its host deadline above that
     // expected transfer time without changing ordinary request deadlines.
-    const timeoutMs = command.command === 'root-native-file-capture' ? 15 * 60 * 1000 : 60000;
+    const timeoutMs = ['root-native-file-capture', 'root-native-file-stage'].includes(command.command) ?
+      15 * 60 * 1000 : 60000;
     const result = queue.then(() => requestOnce(socketPath, command, timeoutMs));
     queue = result.catch(() => {});
     return result;

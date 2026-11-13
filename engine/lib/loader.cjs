@@ -8,11 +8,16 @@ const path = require('node:path');
 const BRIDGE_FILE = path.join(__dirname, '../../bridge/civ_bridge.js');
 const LOADER_PORT = 9026;
 
-function injectAddress(source, pcIp) {
+function injectAddress(source, pcIp, pcPort = null) {
   if (!net.isIPv4(pcIp)) throw Error('Not an IPv4 address to inject: ' + pcIp);
   const match = /PC_IP:\s*'[^']*'/.exec(source);
   if (!match) throw Error('civ_bridge.js has no PC_IP entry to fill in');
-  return source.slice(0, match.index) + `PC_IP: '${pcIp}'` + source.slice(match.index + match[0].length);
+  source = source.slice(0, match.index) + `PC_IP: '${pcIp}'` + source.slice(match.index + match[0].length);
+  if (pcPort === null) return source;
+  if (!Number.isInteger(pcPort) || pcPort < 1024 || pcPort > 65535) throw Error('Not a PC port: ' + pcPort);
+  const portMatch = /PC_PORT:\s*\d+/.exec(source);
+  if (!portMatch) throw Error('civ_bridge.js has no PC_PORT entry to fill in');
+  return source.slice(0, portMatch.index) + `PC_PORT: ${pcPort}` + source.slice(portMatch.index + portMatch[0].length);
 }
 
 // The kernel picks the source address for this route; a connected UDP socket
@@ -33,8 +38,8 @@ function localAddressFor(consoleIp, port = LOADER_PORT) {
 // One outbound connection: send the payload, half-close, then stream the
 // console log lines that fan out from it. The loader keeps the eval alive for
 // the whole session, so this stays open until the bridge finishes.
-async function sendBridge({console: consoleIp, consolePort = LOADER_PORT, pcIp, log = console.log}) {
-  const source = injectAddress(await fs.readFile(BRIDGE_FILE, 'utf8'), pcIp);
+async function sendBridge({console: consoleIp, consolePort = LOADER_PORT, pcIp, pcPort = null, log = console.log}) {
+  const source = injectAddress(await fs.readFile(BRIDGE_FILE, 'utf8'), pcIp, pcPort);
   const socket = net.createConnection({host: consoleIp, port: consolePort});
   let pending = '';
   socket.setEncoding('utf8');

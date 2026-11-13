@@ -15,7 +15,8 @@ const {serve} = require('./lib/bridge.cjs');
 const {isUserFacing} = require('./lib/log.cjs');
 const {loadTarget, selectedTarget, assertFullSupported, materializeTarget, validateArtifacts} = require('./shared/target.cjs');
 
-const port = 39380;
+// NS2_PC_PORT moves the engine listener and the pushed bridge's PC_PORT together.
+const port = Number(process.env.NS2_PC_PORT || 39380);
 const save = (file, value) => fs.writeFile(file, JSON.stringify(value, null, 2) + '\n', {mode: 0o600});
 const DUMP_MARKER = '.ns2jb-firmware-dump.json';
 
@@ -132,6 +133,20 @@ async function sourceDigest(target = loadTarget(selectedTarget(process.env.NS2_T
   return crypto.createHash('sha256').update(JSON.stringify(entries)).digest('hex');
 }
 
+// Replace the run copy's RO payload with a supplied ldr:ro image and update the
+// manifest fields that donor-prepare checks. The engine tree is not changed.
+async function injectRoImage(directory, source) {
+  const payloadDirectory = path.join(directory, 'switch2/ro/payload');
+  const image = await fs.readFile(source);
+  const manifestPath = path.join(payloadDirectory, 'manifest.json');
+  const manifest = JSON.parse(await fs.readFile(manifestPath, 'utf8'));
+  manifest.payloadBytes = image.length;
+  manifest.payloadSha256 = crypto.createHash('sha256').update(image).digest('hex');
+  await fs.writeFile(path.join(payloadDirectory, 'main'), image);
+  await save(manifestPath, manifest);
+  return {source, bytes: image.length, sha256: manifest.payloadSha256};
+}
+
 async function startEngine(directory, dumpDirectory = null, held = false, target = loadTarget(), appOnly = false) {
   const log = await fs.open(path.join(directory, 'run.log'), 'wx', 0o600);
   const output = createWriteStream(null, {fd: log.fd, autoClose: false});
@@ -222,6 +237,11 @@ async function main(args = process.argv.slice(2)) {
     return;
   }
   const options = parseArguments(args), {rpcMode, dumpFirmware, appOnly} = options;
+  // kaiHEN: NS2_RO_IMAGE replaces the RO payload with a full ldr:ro image and
+  // stops after its Initialize handshake (see switch2/pipeline.cjs).
+  const roFrontend = Boolean(process.env.NS2_RO_IMAGE);
+  if (roFrontend && (dumpFirmware || appOnly || !rpcMode))
+    throw Error('NS2_RO_IMAGE needs the held RPC and cannot run --dump-firmware, --app-only or --no-hold.');
   const target = assertFullSupported(loadTarget(options.targetName));
   process.env.NS2_TARGET = target.name;
   const basicArgs = Number(process.env.NS2_BASIC_ARITY || 5);
@@ -254,6 +274,9 @@ async function main(args = process.argv.slice(2)) {
   const result = {platform: 2, target: target.name, sourceSha256: await sourceDigest(target),
     started: new Date().toISOString(), verified: false};
   let native, bridge, engine, failure;
+  const executionFile = path.join(directory, roFrontend ? 'switch2/ro-frontend-current.json' :
+    'switch2/fs-execution-current.json');
+  const executionKey = roFrontend ? 'ro' : 'fs';
   try {
     const connected = await listen({host, port, target, onWaiting() {
       console.log(`Waiting for ${target.displayName} at ${host}:${port}.`);
@@ -271,7 +294,7 @@ async function main(args = process.argv.slice(2)) {
         if (options.send) {
           console.log('ReiAyanami: pushing bridge/civ_bridge.js to the loader on ' +
             consoleHost + ':' + LOADER_PORT);
-          sendBridge({console: consoleHost, pcIp: host, log: line => console.log(line)})
+          sendBridge({console: consoleHost, pcIp: host, pcPort: port, log: line => console.log(line)})
             .then(() => console.log('ReiAyanami: bridge closed'))
             .catch(error => console.error('ReiAyanami: bridge push failed: ' + error.message));
         } else console.log('ReiAyanami: push bridge/civ_bridge.js yourself, or drop --no-send.');
@@ -290,6 +313,7 @@ async function main(args = process.argv.slice(2)) {
     for (const name of ['lib', 'shared', 'switch2'])
       await fs.cp(path.join(__dirname, name), path.join(directory, name), {recursive: true});
     await materializeTarget(target, directory);
+    if (roFrontend) result.roImage = await injectRoImage(directory, process.env.NS2_RO_IMAGE);
     engine = await startEngine(directory, dumpDirectory, rpcMode, target, appOnly);
     if (rpcMode) await engine.ready;
     else checkEngine(await engine.finished);
@@ -298,10 +322,10 @@ async function main(args = process.argv.slice(2)) {
       if (!result.app.verified || !result.app.cleanup?.cleanedUp)
         throw Error('Application-only qualification or cleanup did not verify.');
     } else {
-      result.fs = JSON.parse(await fs.readFile(path.join(directory, 'switch2/fs-execution-current.json')));
-      if (!result.fs.verified || !result.fs.restored ||
-          (rpcMode ? !result.fs.retainedEndpoint?.ready || !result.fs.cleanup?.deferred :
-            !result.fs.cleanup?.cleanedUp))
+      result[executionKey] = JSON.parse(await fs.readFile(executionFile));
+      if (!result[executionKey].verified || !result[executionKey].restored ||
+          (rpcMode ? !result[executionKey].retainedEndpoint?.ready || !result[executionKey].cleanup?.deferred :
+            !result[executionKey].cleanup?.cleanedUp))
         throw Error('FS execution, restoration, or endpoint state did not verify.');
     }
     if (dumpFirmware) {
@@ -313,7 +337,7 @@ async function main(args = process.argv.slice(2)) {
     if (rpcMode) {
       result.rpc = {mode: 'held', state: 'listening', opened: new Date().toISOString()};
       await save(path.join(directory, 'result.json'), result);
-      console.log(`4/4 verified. ${target.displayName} RPC and FS memory endpoint remain live while this process and the app stay open.`);
+      console.log((roFrontend ? 'RO frontend verified. ' : '4/4 verified. ') + `${target.displayName} RPC and FS memory endpoint remain live while this process and the app stay open.`);
       console.log('ReiAyanami: held - MCP attach file ' + path.join(directory, 'connection.json'));
       console.log('ReiAyanami: local check   node engine/rpc.cjs ' + directory + ' status');
       console.log('ReiAyanami: run folder    ' + directory);
@@ -322,8 +346,8 @@ async function main(args = process.argv.slice(2)) {
       result.rpc = {...result.rpc, state: 'closed', reason, closed: new Date().toISOString()};
       if (reason === 'engine-exited') throw Error('The held FS endpoint exited unexpectedly.');
       checkEngine(await engine.release());
-      result.fs = JSON.parse(await fs.readFile(path.join(directory, 'switch2/fs-execution-current.json')));
-      if (!result.fs.cleanup?.cleanedUp) throw Error('Held FS resources did not clean up.');
+      result[executionKey] = JSON.parse(await fs.readFile(executionFile));
+      if (!result[executionKey].cleanup?.cleanedUp) throw Error('Held FS resources did not clean up.');
       if (reason === 'disconnected') throw Error('Held RPC disconnected; do not replay an uncertain native request.');
     }
   } catch (error) {
@@ -348,7 +372,8 @@ async function main(args = process.argv.slice(2)) {
     await save(path.join(directory, 'result.json'), result);
   }
   if (failure) throw Error(failure.message + '\nDetails: ' + directory);
-  console.log('FS execution verified. Original instructions restored and scratch cleaned up.');
+  console.log(roFrontend ? 'RO frontend run finished.' :
+    'FS execution verified. Original instructions restored and scratch cleaned up.');
   if (dumpFirmware) console.log('System-program CodeFS dump: ' +
     path.join(dumpDirectory, 'firmware-dump.json'));
   console.log('Restart the console when finished.');
@@ -356,5 +381,5 @@ async function main(args = process.argv.slice(2)) {
 }
 
 module.exports = {main, addresses, chooseHost, connectCommand, parseArguments, sourceDigest, prepareDumpDirectory,
-  startEngine, checkEngine, waitForRpcStop};
+  startEngine, checkEngine, waitForRpcStop, injectRoImage};
 if (require.main === module) main().catch(error => {console.error(error.message); process.exitCode = 1;});

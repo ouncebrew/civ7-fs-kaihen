@@ -155,10 +155,10 @@
    "dynamicSymbol": "pthread_create (defined symbol 21430, size 0x220)",
    "semantics": "pthread_create(thread*, attr, entry, arg); null attr uses the default joinable attribute path",
    "outputSemantics": {
-    "status": "RUNTIME_DISCOVERY_REQUIRED",
-    "evidence": "0x14235c computes x8=x23&7 and 0x142364 stores it to the output slot. The allocated thread object is 8-byte aligned, so a successful create can return 0 with output 0.",
-    "threadPointerFormula": "At 0x142340 x20=x23+0x310; at 0x14234c x8=x21+(w0<<3), where x21 is the entry argument (ownedFrameBase); at 0x142354 x20 is stored at [x8+0x80]. w0 is the helper return at 0x142348 and is not stored in the frame; its value is not statically known.",
-    "diagnostic": "Read only owned memory after create returns. Test the bounded diagnostic candidates w0=0..3 at ownedFrameBase+0x80,+0x88,+0x90,+0x98; this probe bound is not a claimed semantic maximum for w0. For each nonzero aligned candidate, query its mapping, then verify [candidate-0x150]==sdk+0x5511b4 and [candidate-0x148]==ownedFrameBase (the thread object's entry/argument at x23+0x1c0/+0x1c8). Stop if none matches; do not call through an unvalidated pointer or change create/default attributes."
+    "status": "CONFIRMED_TAGGED_THREADTYPE",
+    "handle": "pthread_t = nn::os::ThreadType* | 7",
+    "evidence": "0x14226c-0x1422d0: the 8-aligned allocation x23 is passed as the ThreadType (x0) and the entry argument (x2) of nn::os::CreateThread. 0x14234c-0x142354 stores x23+0x310 at x23+0x80+(w0<<3), i.e. the new thread's own TLS slot array (w0 is the pthread key from 0x143110); it does not touch the caller's entry argument. 0x14235c orr x8,x23,#7 and 0x142364 store the tagged ThreadType to the output slot.",
+    "consumers": "pthread_join (0x142480) and the other pthread_t entry points (0x142454, 0x142550) return EINVAL unless (t & 7) == 7 and untag internally. nn::os::TryWaitThread (0x137110) takes the untagged ThreadType* and reads its kernel handle at +0x1b0; a tagged value makes it wait on a garbage handle and abort."
    }
   },
   "join": {
@@ -395,5 +395,12 @@
    7
   ],
   "frameCompatibility": "Raw threads have no nn::os ThreadType: worker identity and pthread join are unavailable, exit must be the svcExitThread gadget, affinity uses the svc wrappers with the kernel handle, and TPIDRRO_EL0 is kernel-initialized (no msr tpidrro_el0 gadget exists in the dump; measure with readTpidrro before IPC use)."
+ },
+ "pthreadHandle": {
+  "form": "tagged",
+  "tagMask": 7,
+  "tryWait": "untagged",
+  "join": "tagged",
+  "note": "SmileBASIC's pthread_t is the plain ThreadType*, so kaiHEN passes the create output straight to tryWait and join. On Civ7, tryWait needs (t & ~7) and join needs t."
  }
 }

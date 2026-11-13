@@ -164,6 +164,34 @@ async function main() {
     const launch = await script('ro', 'launch', [], 300000);
     check(launch.imageAccepted && launch.restored && launch.pid, 'PM did not accept the payload');
     const activation = await stage('Start RO payload', () => runtime.activate(launch.file));
+    if (process.env.NS2_RO_IMAGE) {
+      // kaiHEN RO frontend: the payload is a full ldr:ro replacement, not the
+      // FS demo. Stop after its Initialize handshake and hold the endpoint for
+      // start-hen (same flow as kaiHEN's ns2jb pipeline).
+      const handoff = await stage('Restore Loader session', () => runtime.handoff());
+      log.step('4/4 Connecting to the ldr:ro frontend'); note('phase 4/4 RO frontend');
+      const probe = await stage('Connect to the RO frontend', () => require('./ro/ready.cjs').main());
+      const resultFile = path.join(__dirname, 'ro-frontend-current.json');
+      const result = {session: a.session, pid: activation.pid, launch: launch.file,
+        handoff: handoff.file, probe, verified: true, restored: true};
+      const memory = await connect();
+      const donorCleanup = await stage('Remove RO donor files',
+        () => memory.request({command: 'root-native-donor-cleanup'}));
+      check(donorCleanup.cleanedUp, 'The RO donor files did not clean up');
+      if (holdRpc) {
+        result.cleanup = {deferred: true, donor: donorCleanup};
+        result.retainedEndpoint = {ready: true, socketPath: acquisition.socketPath};
+        await save(resultFile, result);
+        const release = require('./hold.cjs').waitForRelease();
+        process.send({type: 'held-ready', session: a.session});
+        await release;
+      }
+      result.cleanup = await stage('Release FS resources', () => acquisition.retire());
+      await save(resultFile, result);
+      record.verified = true;
+      record.result = result;
+      return;
+    }
     const proof = await stage('RO instruction challenges', () => runtime.probe(activation.pid));
     const handoff = await stage('Restore Loader session', () => runtime.handoff());
     const payload = donor.files.find(item => item.name === 'main');
