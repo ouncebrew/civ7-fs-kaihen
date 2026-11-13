@@ -13,14 +13,13 @@ This runs exploits against system services. Use it at your own risk.
 
 ## What you need
 
-- A Switch 2 on firmware 23.0.1 with the exFAT update. That is the only
-  firmware this has been tested on.
-- Civilization VII on internal storage and CivSwitch set up,
+- A Switch 2 <= 23.0.1. Only tested on firmware 23.0.1 with the exFAT update.
+- Civilization VII on cartridge and CivSwitch set up,
   so that the game shows `Awaiting payload at <console-ip>:9026` when started.
-- An SD card in the console. kaiHEN's files and hbmenu are copied to it.
-- A computer on the same network, preferably running Linux or macOS
-  (Windows is less reliable), with a recent Node.js (tested with 24).
-  No `npm install` is needed.
+- An SD card in the console. A non-express microSD card will work too, press
+  home when you get the micronag (telling you this card isn't supported).
+- A computer on the same network, preferably running Linux or macOS, with a
+  recent Node.js (tested with 24). No `npm install` is needed.
 - The kaiHEN 0.0.4 release, unpacked. kaiHEN is not publicly released yet,
   so this repository does not include it or link to it. The launcher uses its
   `ns2jb/testship/` folder, which holds the kaiHEN binaries, `hbmenu.nro` and
@@ -28,10 +27,17 @@ This runs exploits against system services. Use it at your own risk.
 
 ## Booting kaiHEN
 
-1. Restart the console and wait on the Home screen for 45 seconds to a
-   minute. Then start Civilization VII and let CivSwitch reach
-   `Awaiting payload`.
-2. From this repository's folder, run the launcher with your console's IP
+0. Set up your save file with CivSwitch. You may need to go to Data Management
+   to delete your save file and reinstall it occasionally. [This esp32 LDN
+   approach](https://github.com/SeanHeuc/CivSwitch/tree/main/esp32-ldn-civ7)
+   is highly recommended. Insert your microSD card before you start.
+1. Set up a wired connection that won't get you Nintendo server access.
+   Be very careful with this. If you don't know how to do this right,
+   DO NOT USE THIS YET. It's not worth the risk of getting the blacklist
+   update that'll lock you out of civ 7 without a reboot.
+2. Boot into CivSwitch console by going to Civ 7 -> Load Game.
+   Wait for `Awaiting payload`.
+3. From this repository's folder, run the launcher with your console's IP
    address:
 
    ```sh
@@ -42,7 +48,7 @@ This runs exploits against system services. Use it at your own risk.
    `--ship`. With neither, the launcher looks for
    `kaiHEN/0.0.4/ns2jb/testship` in the folder that contains this repository.
 
-3. Wait, usually a few minutes. The run goes through four phases:
+4. Wait, usually a few minutes. The run goes through four phases:
 
    1. checking the console
    2. acquiring FS memory
@@ -61,12 +67,12 @@ This runs exploits against system services. Use it at your own risk.
    HEN is running. Close Civilization VII normally; hold R while opening a native game.
    ```
 
-4. Close Civilization VII normally. The launcher exits once the game closes.
-   HEN keeps running on the console, and the computer is no longer needed.
-5. Hold R while opening a game (not SmileBASIC). The first time, HEN only records
+5. Close Civilization VII normally. The launcher exits once the game closes.
+   HEN keeps running on the console, and the computer is no longer needed until you restart.
+6. Hold R while opening a different game. The first time, HEN only records
    the game's signing policy and the game starts as usual. The next R-held
    launch opens hbmenu.
-6. HEN lasts until the console restarts. Restarting also puts the console's
+7. HEN lasts until the console restarts. Restarting also puts the console's
    own RO service back. To use homebrew again after a restart, run the
    launcher again.
 
@@ -136,3 +142,4 @@ adapter after kaiHEN's unmodified `bootstrap.bin`.
 - [kurumuz](https://github.com/kurumuz) for kaiHEN and its ns2jb engine.
 - [Rastapasta](https://github.com/rastapasta) for the research, and for
   putting up with the rants.
+- LLMs were involved in the development of this. Please don't use it if you don't trust it.
