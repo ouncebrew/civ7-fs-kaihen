@@ -130,7 +130,7 @@ the untagged pointer, joins the tagged one, and places a 24-byte try-wait
 adapter after kaiHEN's unmodified `bootstrap.bin`.
 `targets/civ7/app/thread-code.json` has the disassembly references.
 
-## Credits
+## Standing on the shoulders of giants
 
 - [Gezine](https://github.com/Gezine/CivSwitch) for CivSwitch, the Civ7
   entrypoint.
