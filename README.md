@@ -1,6 +1,6 @@
 # civ7-fs-kaihen
 
-Boots kaiHEN 0.0.4 on a Switch 2 through Civilization VII.
+Boots kaiHEN 20261113 on a Switch 2 through Civilization VII.
 
 [kaiHEN](https://github.com/ouncebrew/kaihen) is a homebrew enabler (HEN)
 for Switch 2: once it runs, holding R while opening a game starts
@@ -20,7 +20,7 @@ exploit from [civ7-fs](https://github.com/HerXayah/civ7-fs) and Gezine's
   home when you get the micronag (telling you this card isn't supported).
 - A computer on the same network, preferably running Linux or macOS, with a
   recent Node.js (tested with 24). No `npm install` is needed.
-- The [kaiHEN](https://github.com/ouncebrew/kaihen) 0.0.4 release, unpacked.
+- The [kaiHEN](https://github.com/ouncebrew/kaihen) 20261113 release, unpacked.
 
 ## Booting kaiHEN
 
