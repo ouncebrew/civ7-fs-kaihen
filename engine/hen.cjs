@@ -10,11 +10,11 @@ const readline = require('node:readline');
 
 const runScript = path.join(__dirname, 'run.cjs');
 const defaultShip = process.env.KAIHEN_TESTSHIP ||
-  path.join(__dirname, '../../kaiHEN/0.0.4/ns2jb/testship');
+  path.join(__dirname, '../../ns2jb/testship');
 
 function usage(code) {
   console.log(`Usage: node engine/hen.cjs CONSOLE-IP [options]
-  --ship DIR            kaiHEN testship folder (default: $KAIHEN_TESTSHIP or
+  --dir DIR             kaiHEN testship folder (default: $KAIHEN_TESTSHIP or
                         ${path.relative(process.cwd(), defaultShip)})
   --restore-save DIR    first run DIR/restore_save.py DIR/trigger-recreate CONSOLE-IP
                         (CivSwitch save-tools folder)
@@ -33,7 +33,7 @@ function parse(args) {
       return args[i];
     };
     if (arg === '--help') usage(0);
-    else if (arg === '--ship') options.ship = path.resolve(value());
+    else if (arg === '--dir') options.ship = path.resolve(value());
     else if (arg === '--restore-save') options.restore = path.resolve(value());
     else if (arg === '--no-hbmenu') options.hbmenu = false;
     else if (arg === '--no-programs') options.programs = false;

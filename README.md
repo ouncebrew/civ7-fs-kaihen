@@ -41,12 +41,12 @@ This runs exploits against system services. Use it at your own risk.
    address:
 
    ```sh
-   node engine/hen.cjs 192.168.2.118 --ship /path/to/kaiHEN/0.0.4/ns2jb/testship
+   node engine/hen.cjs 192.168.2.118 --dir /path/to/ns2jb/testship
    ```
 
    You can set the `KAIHEN_TESTSHIP` environment variable instead of passing
-   `--ship`. With neither, the launcher looks for
-   `kaiHEN/0.0.4/ns2jb/testship` in the folder that contains this repository.
+   `--dir`. With neither, the launcher looks for
+   `ns2jb/testship` in the folder that contains this repository.
 
 4. Wait, usually a few minutes. The run goes through four phases:
 
@@ -80,7 +80,7 @@ Launcher options:
 
 | Option | Effect |
 |---|---|
-| `--ship DIR` | the kaiHEN testship folder |
+| `--dir DIR` | the kaiHEN testship folder |
 | `--restore-save DIR` | restore the CivSwitch save before starting (see below); `DIR` is the `save-tools` folder of [civswitch-kit](https://gitee.com/mza1010/civswitch-kit) |
 | `--no-hbmenu` | do not copy `hbmenu.nro` |
 | `--no-programs` | do not copy `programs/` to `/switch/` on the SD card |
