@@ -79,7 +79,13 @@ async function main() {
   // Lowered to 1 on the fragile Civ7 console to ~halve exposure to the sporadic
   // mid-sweep app fault; SmileBASIC keeps the 2-hit margin.
   const fieldCopies = target.fieldCopies ?? 2;
-  const waveAttempts = 30;
+  // Wave budget per profile (and for the pin re-roll). NS2_WAVE_ATTEMPTS
+  // overrides the default of 30. On Civ7, 10 may be the better choice: no
+  // tested run has succeeded after wave 10, and a run that fails early leaves
+  // more time to restore the save and restart the console for the next try.
+  const waveAttempts = Number(process.env.NS2_WAVE_ATTEMPTS ?? 30);
+  check(Number.isInteger(waveAttempts) && waveAttempts > 0,
+    'NS2_WAVE_ATTEMPTS must be a positive integer');
   // Waves a large save-heap marker is given before the early exit; a hit inside
   // this budget keeps the sweep going normally.
   // Waves for a scanned marker offset/shift combination (source/ uses 12). The

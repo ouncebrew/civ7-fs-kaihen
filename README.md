@@ -95,15 +95,15 @@ Most failed runs stop in phase 2 with `Positive canary verification failed`,
 or in phase 3 at `find-metadata` or `install-retained`. Getting FS memory is a
 race and often takes several tries. kaiHEN has not run at that point.
 
+Phase 2 tries up to 30 waves (race attempts) before it gives up. No tested on
+my console has succeeded after wave 10, so `NS2_WAVE_ATTEMPTS=10` may be the better
+setting to save time and fail early.
+
 After a failed run:
 
-1. While the game still shows `Awaiting payload`, restore the CivSwitch save
-   with civswitch-kit's `save-tools/restore_save.py`. A failed run tends to
-   leave the save in a state that makes the next try less likely to work.
-   You can also restore it at the start of the next try with
-   `--restore-save`.
-2. Restart the console. Make one attempt per console boot.
-3. Start again from step 1 of *Booting kaiHEN*.
+1. Restart the console. Make one attempt per console boot.
+2. Start again from step 1 of *Booting kaiHEN*.
+3. If failing too long, you may want to re-do your save file.
 
 Every run writes a folder under `runs/`. `run.log` has the full output. After
 a HEN attempt, `switch2/ro/hen-startup.json` has the bootstrap's result:
