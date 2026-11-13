@@ -142,6 +142,11 @@ async function main() {
   console.log('Keep this process running until Civilization VII closes.');
   if (acquisition.exitCode === null)
     await new Promise(resolve => acquisition.once('exit', resolve));
+  // Closing the game ends run.cjs with a release error, which is expected once
+  // HEN is running. start-hen's endpoint socket would otherwise keep this
+  // process alive, so exit explicitly.
+  console.log('Civilization VII closed; the launcher is done.');
+  process.exit(0);
 }
 
 main().catch(error => {
