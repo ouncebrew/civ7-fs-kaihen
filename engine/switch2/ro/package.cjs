@@ -6,8 +6,8 @@ const {pathRequest} = require('./files.cjs');
 const filesystem = require('../app/filesystem.cjs');
 
 const check = (condition, message) => { if (!condition) throw Error(message); };
-const packagePath = kind => `@Sdcard:/ouncehen/bin/${kind}/exefs.nsp`;
-const filePath = kind => `/ouncehen/bin/${kind}/exefs.nsp`;
+const packagePath = kind => `@Sdcard:/kaihen/bin/${kind}/exefs.nsp`;
+const filePath = kind => `/kaihen/bin/${kind}/exefs.nsp`;
 
 function packageInput() {
   const input = Buffer.alloc(16);
@@ -64,7 +64,7 @@ async function stagePackage(context, domain, root, kind, source) {
   check(!opened.result, `SD filesystem open failed: ${opened.canonicalResult}`);
   const sd = domain.oneHandle(opened);
   try {
-    for (const directory of ['/ouncehen', '/ouncehen/bin', `/ouncehen/bin/${kind}`]) {
+    for (const directory of ['/kaihen', '/kaihen/bin', `/kaihen/bin/${kind}`]) {
       const exists = await filesystem.pathMethod(s, sd, 7, directory);
       if (exists.result) {
         const created = await pathCall(context, domain, sd, 2, directory);

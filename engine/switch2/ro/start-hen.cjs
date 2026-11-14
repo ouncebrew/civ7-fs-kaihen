@@ -93,7 +93,7 @@ async function main(imagePath, bootstrapPath, gameMainPath, programs = []) {
   args.writeUInt32LE(shell.sm, 288);
   const acquisition = JSON.parse(fs.readFileSync(memory.reportFile));
   const fsRoot = acquisition.ownedRoot.clones[0];
-  const packagePath = '@Sdcard:/ouncehen/bin/hen/exefs.nsp';
+  const packagePath = '@Sdcard:/kaihen/bin/hen/exefs.nsp';
   args.writeUInt32LE(fsRoot, 296);
   args.write(packagePath, 300, 'utf8');
   args.writeUInt32LE(fsProcess.handle, 396);
@@ -109,7 +109,7 @@ async function main(imagePath, bootstrapPath, gameMainPath, programs = []) {
     }
     console.log('Staging game loader');
     const stagedGame = await memory.request({command: 'root-native-file-stage',
-      root: fsRoot, target: '/ouncehen/bin/game/main', source: gameMainPath});
+      root: fsRoot, target: '/kaihen/bin/game/main', source: gameMainPath});
     const stagedPrograms = [];
     for (const program of programs) {
       console.log(`Staging ${program.target}`);
@@ -118,7 +118,7 @@ async function main(imagePath, bootstrapPath, gameMainPath, programs = []) {
     }
     console.log('Staging HEN');
     const staged = await memory.request({command: 'root-native-file-stage',
-      root: fsRoot, target: '/ouncehen/bin/hen/main', source: imagePath});
+      root: fsRoot, target: '/kaihen/bin/hen/main', source: imagePath});
     console.log('Starting native bootstrap');
     const image = makeBootstrapImage(text);
     const launched = await frontend.main({
@@ -136,7 +136,7 @@ async function main(imagePath, bootstrapPath, gameMainPath, programs = []) {
         record.stagedGame = stagedGame;
         record.stagedPrograms = stagedPrograms;
         record.stagedMenu = stagedMenu;
-        record.package = '@Sdcard:/ouncehen/bin/hen/exefs.nsp';
+        record.package = '@Sdcard:/kaihen/bin/hen/exefs.nsp';
         const result = await thread.execute(session, entry, record, save, {
           waitMs: 60000,
           async prepare(session, address) {
