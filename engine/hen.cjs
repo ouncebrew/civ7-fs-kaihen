@@ -9,17 +9,17 @@ const {spawn} = require('node:child_process');
 const readline = require('node:readline');
 
 const runScript = path.join(__dirname, 'run.cjs');
-const defaultShip = process.env.KAIHEN_TESTSHIP ||
-  path.join(__dirname, '../../ns2jb/testship');
+const defaultShip = process.env.KAIHEN_PATH ||
+  path.join(__dirname, '../kaihen');
 
 function usage(code) {
   console.log(`Usage: node engine/hen.cjs CONSOLE-IP [options]
-  --dir DIR             kaiHEN testship folder (default: $KAIHEN_TESTSHIP or
+  --dir DIR             kaiHEN folder containing bootstrap.bin etc (default: $KAIHEN_PATH or
                         ${path.relative(process.cwd(), defaultShip)})
   --restore-save DIR    first run DIR/restore_save.py DIR/trigger-recreate CONSOLE-IP
                         (CivSwitch save-tools folder)
-  --no-hbmenu           do not stage hbmenu.nro
-  --no-programs         do not stage the testship programs/ folder
+  --no-hbmenu           do not stage hbmenu.nro to SD
+  --no-programs         do not stage the programs/ folder to SD
 Start with CivSwitch's Remote JS Loader listening on the console (:9026).`);
   process.exit(code);
 }
